@@ -1,10 +1,7 @@
+```yaml
 name: CI
 
 on:
-  pull_request:
-    branches:
-      - main
-
   push:
     branches:
       - main
@@ -13,6 +10,30 @@ permissions:
   contents: read
 
 jobs:
+
+  # ============================================================
+  # APPLICATION TEST
+  # ============================================================
+  application-test:
+    name: Application Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+
+      - name: Run Application Tests
+        shell: pwsh
+        run: |
+          ./tests/test-app.ps1
+
+
+  # ============================================================
+  # TERRAFORM CI
+  # ============================================================
   terraform-check:
     name: Terraform Check
     runs-on: ubuntu-latest
@@ -26,42 +47,49 @@ jobs:
         working-directory: terraform
 
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
+
+      # --------------------------------------------------------
+      # AWS OIDC
+      # --------------------------------------------------------
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ap-south-1
 
-      - name: Verify AWS Identity
-        run: aws sts get-caller-identity
 
+      - name: Verify AWS Identity
+        run: |
+          aws sts get-caller-identity
+
+
+      # --------------------------------------------------------
+      # TERRAFORM
+      # --------------------------------------------------------
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+
       - name: Terraform Format Check
-        run: terraform fmt -check -recursive
+        run: |
+          terraform fmt -check -recursive
+
 
       - name: Terraform Init
-        run: terraform init -input=false
+        run: |
+          terraform init -input=false
+
 
       - name: Terraform Validate
-        run: terraform validate
+        run: |
+          terraform validate
+
 
       - name: Terraform Plan
-        run: terraform plan -input=false
-
-  application-test:
-    name: Application Test
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Run Application Tests
-        shell: pwsh
         run: |
-          ./tests/test-app.ps1
+          terraform plan -input=false
+```
