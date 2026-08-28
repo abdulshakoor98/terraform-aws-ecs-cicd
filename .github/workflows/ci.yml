@@ -17,6 +17,10 @@ jobs:
     name: Terraform Check
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      id-token: write
+
     defaults:
       run:
         working-directory: terraform
@@ -24,6 +28,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-south-1
+
+      - name: Verify AWS Identity
+        run: aws sts get-caller-identity
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -48,7 +61,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run application tests
+      - name: Run Application Tests
+        shell: pwsh
         run: |
-          echo "Running application tests..."
-          echo "Tests passed."
+          ./tests/test-app.ps1

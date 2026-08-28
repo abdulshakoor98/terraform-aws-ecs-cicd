@@ -23,8 +23,3 @@ variable "container_port" {
   type        = number
   default     = 80
 }
-
-variable "certificate_arn" {
-  description = "ACM certificate ARN"
-  type        = string
-}
