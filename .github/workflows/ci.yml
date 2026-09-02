@@ -95,3 +95,5 @@ jobs:
         run: |
           terraform plan -input=false
 # OIDC test
+
+# Trigger CI after S3 permission fix
