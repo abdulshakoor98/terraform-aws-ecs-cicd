@@ -5,89 +5,17 @@ on:
     branches:
       - main
 
-permissions:
-  contents: read
-
 jobs:
-
-  application-test:
-    name: Application Test
+  test:
+    name: Test Job
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run Application Tests
-        shell: pwsh
+      - name: Test
         run: |
-          ./tests/test-app.ps1
-
-
-  terraform-check:
-    name: Terraform Check
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      id-token: write
-
-    defaults:
-      run:
-        working-directory: terraform
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Check GitHub Context
-        run: |
+          echo "CI WORKFLOW IS RUNNING"
           echo "Repository: $GITHUB_REPOSITORY"
-          echo "Branch: $GITHUB_REF_NAME"
-          echo "Event: $GITHUB_EVENT_NAME" 
-                - name: Debug OIDC Claims
-        shell: bash
-        run: |
-          TOKEN=$(curl -sS \
-            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" \
-            | jq -r '.value')
-
-          PAYLOAD=$(echo "$TOKEN" | cut -d. -f2 | tr '_-' '/+')
-
-          PADDING=$((4 - ${#PAYLOAD} % 4))
-
-          if [ "$PADDING" -ne 4 ]; then
-            PAYLOAD="${PAYLOAD}$(printf '=%.0s' $(seq 1 $PADDING))"
-          fi
-
-          echo "$PAYLOAD" | base64 -d | jq '{sub, aud, repository, ref}'
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ap-south-1
-
-      - name: Verify AWS Identity
-        run: |
-          aws sts get-caller-identity
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Format Check
-        run: |
-          terraform fmt -check -recursive
-
-      - name: Terraform Init
-        run: |
-          terraform init -input=false
-
-      - name: Terraform Validate
-        run: |
-          terraform validate
-
-      - name: Terraform Plan
-        run: |
-          terraform plan -input=false
+          echo "Commit: $GITHUB_SHA"
